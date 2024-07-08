@@ -3,10 +3,10 @@
 #sudo apt upgrade -y > /dev/null
 #sudo apt install -y jq git curl vim wget unzip
 
-if [[ $HOSTNAME =~ ^control-* ]]
+if [[ $HOSTNAME =~ -control-[0-9]+$ ]]
 then
     # Server (Control Plane)
-    if [[ $HOSTNAME -eq 'control-0' ]]
+    if [[ $HOSTNAME == *-control-0 ]]
     then
         echo "Initializing k3s cluster installation..." && \
         curl -sfL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - --write-kubeconfig-mode=644 --cluster-init

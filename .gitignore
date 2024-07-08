@@ -3,3 +3,5 @@
 terraform.tfstate*
 .terraform.tfstate*
 terraform.tfvars
+ssh-keys
+output_configs
