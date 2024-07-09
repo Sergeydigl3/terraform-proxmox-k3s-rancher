@@ -2,16 +2,16 @@ terraform {
   required_providers {
     # https://registry.terraform.io/providers/Telmate/proxmox/latest/docs
     proxmox = {
-      source = "Telmate/proxmox"
+      source  = "Telmate/proxmox"
       version = "2.9.14"
     }
   }
 }
 
 resource "proxmox_vm_qemu" "control-plane" {
-  count   = var.controller_count
-  name    = "${var.preffix_vm}${var.cluster_name}-control-${count.index}"
-  tags    = "${var.cluster_name},control"
+  count = var.controller_count
+  name  = "${var.preffix_vm}${var.cluster_name}-control-${count.index}"
+  tags  = "${var.cluster_name},control"
 
   target_node = var.proxmox_node
 
@@ -47,7 +47,7 @@ resource "proxmox_vm_qemu" "control-plane" {
 
   ipconfig0 = "ip=dhcp"
 
-  nameserver = "${var.proxmox_dns}"
+  nameserver = var.proxmox_dns
 
   sshkeys = file("${var.ssh_public_key_path}")
 
@@ -62,7 +62,7 @@ resource "proxmox_vm_qemu" "control-plane" {
     destination = "/tmp/bootstrap_k3s.sh"
     content = templatefile("${path.module}/bootstrap_k3s.sh.tpl",
       {
-        k3s_token = var.k3s_token,
+        k3s_token           = var.k3s_token,
         k3s_cluster_join_ip = proxmox_vm_qemu.control-plane[0].default_ipv4_address
       }
     )
@@ -78,9 +78,9 @@ resource "proxmox_vm_qemu" "control-plane" {
 }
 
 resource "proxmox_vm_qemu" "worker" {
-  count   = var.workers_count
-  name    = "${var.preffix_vm}${var.cluster_name}-worker-${count.index}"
-  tags    = "${var.cluster_name},worker"
+  count = var.workers_count
+  name  = "${var.preffix_vm}${var.cluster_name}-worker-${count.index}"
+  tags  = "${var.cluster_name},worker"
 
   depends_on = [
     proxmox_vm_qemu.control-plane[0]
@@ -120,7 +120,7 @@ resource "proxmox_vm_qemu" "worker" {
 
   ipconfig0 = "ip=dhcp"
 
-  nameserver = "${var.proxmox_dns}"
+  nameserver = var.proxmox_dns
 
   sshkeys = file("${var.ssh_public_key_path}")
 
@@ -136,7 +136,8 @@ resource "proxmox_vm_qemu" "worker" {
     content = templatefile("${path.module}/bootstrap_k3s.sh.tpl",
       {
         k3s_token = var.k3s_token,
-        k3s_cluster_join_ip = proxmox_vm_qemu.control-plane[0].default_ipv4_address
+        k3s_cluster_join_ip = proxmox_vm_qemu.control-plane[0].default_ipv4_address,
+        k3s_cluster_name = var.cluster_name
       }
     )
   }
@@ -156,7 +157,10 @@ resource "null_resource" "get_config" {
   provisioner "remote-exec" {
     inline = [
       "cat /etc/rancher/k3s/k3s.yaml > /tmp/k3s_config.yaml",
-      "sed -i.bak \"s/127.0.0.1/${proxmox_vm_qemu.control-plane[0].default_ipv4_address}/\" /tmp/k3s_config.yaml"
+      "sed -i.bak \"s/127.0.0.1/${proxmox_vm_qemu.control-plane[0].default_ipv4_address}/\" /tmp/k3s_config.yaml",
+      "sed -i '/clusters:/,/^  name: default/s/^  name: default/  name: ${var.cluster_name}/' /tmp/k3s_config.yaml",
+      "sed -i '/contexts:/,/users:/s/cluster: default/cluster: ${var.cluster_name}/' /tmp/k3s_config.yaml",
+      "kubectl config --kubeconfig=/tmp/k3s_config.yaml rename-context default ${var.cluster_name}",
     ]
 
     connection {
