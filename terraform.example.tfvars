@@ -1,0 +1,10 @@
+template_name = "ubuntu-2004-cloudinit-template"
+proxmox_node = "pve"
+ssh_private_key_path = "ssh-keys/private_key"
+ssh_public_key_path = "ssh-keys/authorized_keys"
+proxmox_dns = "192.168.1.1"
+
+pm_api_url="https://192.168.1.194:8006/api2/json"
+pm_api_token_id="here your token id"
+pm_api_token_secret="here your token secret"
+configs_output_local = "/mnt/c/Users/Serge/.kube/output_configs"

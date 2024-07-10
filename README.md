@@ -1,3 +1,33 @@
+# Additional info about fork
+I was faced with the need to raise several clusters, so I expanded this code.
+
+Features:
+- You can create many clusters!
+- You need only tempate image to start
+- After cluster started, kubeconfig files will saved automatically to your machine!
+
+Please note:
+- launching is only possible under Linux (or WSL) due to the specifics of the commands
+- There is an error in the original guide for creating a template image (at least it doesn’t work for me). For this
+remove these lines. And then change it in the web version. select the drive and set it as "scsi0". Also go to the hardware and in the boot options put it first. After this, the template image will be ready.
+```
+  --scsi0 $PROXMOX_STORAGE_NAME:vm-$PROXMOX_TEMPLATE_VM_ID-disk-0 \
+  --boot c --bootdisk scsi0 \
+```
+
+My use case:
+I use it under wsl, and in terraform.tfvars i specify path to windows system with /mnt/c/Users....
+
+# How to use fork
+
+1. Prepare template image
+2. git clone my repo to your machine and create terraform.tfvars file, you can see an example in example.tfvars
+3. Create folder "ssh-keys", and insert your keys.
+4. Use ```terraform init``` to download all modules
+5. Use ```terraform apply``` to start cluster
+6. Use ```terraform destroy``` to destroy all clusters 
+
+
 # terraform-proxmox-k3s-rancher
 
 Useful for labbing at home, this repository provides a quick and easy way to deploy a [K3s](https://k3s.io/) cluster on an existing [Proxmox VE](https://www.proxmox.com/en/proxmox-ve) hypervisor using [Terraform](https://www.terraform.io/).
