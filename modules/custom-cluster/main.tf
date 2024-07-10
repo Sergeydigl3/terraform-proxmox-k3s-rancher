@@ -158,9 +158,11 @@ resource "null_resource" "get_config" {
     inline = [
       "cat /etc/rancher/k3s/k3s.yaml > /tmp/k3s_config.yaml",
       "sed -i.bak \"s/127.0.0.1/${proxmox_vm_qemu.control-plane[0].default_ipv4_address}/\" /tmp/k3s_config.yaml",
-      "sed -i '/clusters:/,/^  name: default/s/^  name: default/  name: ${var.cluster_name}/' /tmp/k3s_config.yaml",
-      "sed -i '/contexts:/,/users:/s/cluster: default/cluster: ${var.cluster_name}/' /tmp/k3s_config.yaml",
-      "kubectl config --kubeconfig=/tmp/k3s_config.yaml rename-context default ${var.cluster_name}",
+      "sed -i 's/current-context: default/current-context: ${var.cluster_name}/g' /tmp/k3s_config.yaml",
+      "sed -i 's/cluster: default/cluster: ${var.cluster_name}/g' /tmp/k3s_config.yaml",
+      "sed -i 's/user: default/user: ${var.cluster_name}/g' /tmp/k3s_config.yaml",
+      "sed -i 's/name: default/name: ${var.cluster_name}/g' /tmp/k3s_config.yaml",
+      # "kubectl config --kubeconfig=/tmp/k3s_config.yaml rename-context default ${var.cluster_name}",
     ]
 
     connection {
